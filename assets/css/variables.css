@@ -1,0 +1,35 @@
+body{
+    --accent-color: rgb(220, 143, 36);
+    --accent-color-opaque: rgba(220, 143, 36,.2);
+    --mid-accent: rgb(194, 125, 28);
+    --dark-accent: rgb(167, 107, 21);
+    --primary-color: black;
+    --lighter-color: #101010;
+    --light-color: #151515;
+    --light-mid-color: #202020;
+    --mid-color: #252525;
+    --mid-dark-color: #303030;
+    --dark-color: #353535;
+
+    --dark-mid-color: #505050;
+    --darker-color: #707070;
+    --darkest-color: #909090;
+
+    --cursor-default: default;
+    --cursor-pointer: pointer;
+    --cursor-blocked: not-allowed;
+    --cursor-text: text;
+    --cursor-tooltip: help;
+
+    --transition-duration: .15s;
+
+    --side-bar-width: 260px;
+    --side-bar-font-size: 14px;
+}
+
+@media screen and (min-width: 1600px) {
+    body{
+        --side-bar-width: 300px;
+        --side-bar-font-size: 16px;
+    }
+}
