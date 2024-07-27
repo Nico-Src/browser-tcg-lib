@@ -1,5 +1,5 @@
 <script setup>
-import { CARD_CONFIG } from '~/custom_modules/config';
+import { CARD_CONFIG, TABlE_CONFIG } from '~/custom_modules/config';
 
 const route = useRoute();
 const router = useRouter();
@@ -15,7 +15,6 @@ const gltfLoader = new GLTFLoader();
 let hoveredCard;
 const mousePosition = new THREE.Vector2();
 const raycaster = new THREE.Raycaster();
-let currentPlacement = -2;
 
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -44,7 +43,7 @@ camera.position.set(0, 10, 5);
 // Has to be done everytime we update the camera position.
 orbit.target = new THREE.Vector3(0, 2.5, 0);
 orbit.update();
-// orbit.enabled = false;
+orbit.enabled = false;
 
 // Creates a 12 by 12 grid helper.
 const gridHelper = new THREE.GridHelper(12, 12);
@@ -73,8 +72,8 @@ gltfLoader.load('/kitchen_table.glb', function (gltf) {
     });
 });
 
-const gameZone = new GameZone([-2.25, 3.18, 0.55], CARD_CONFIG.size.width + 0.1, CARD_CONFIG.size.height + 0.1, 0.015);
-const gameZone2 = new GameZone([-1.5, 3.18, 0.55], (CARD_CONFIG.size.width + 0.1) * 4, CARD_CONFIG.size.height + 0.1, 0.015);
+const gameZone = new GameZone({x: -2.25, y: TABlE_CONFIG.height, z: 0.55}, 1, 1);
+const gameZone2 = new GameZone({x: -1.5, y: TABlE_CONFIG.height, z: 0.55}, 2, 2);
 
 const gameZones = [gameZone, gameZone2];
 
@@ -119,12 +118,15 @@ window.addEventListener('click', function (e) {
                 defaults: {duration: 0.3, delay: 0}
             });
 
+            const slot = gameZone2.cardSlots.find(slot => slot.card === null)
+            if(!slot) return;
+
             tl.to(hoveredCard.rotation, {y: Math.PI,z: 0,x: -Math.PI / 2})
-            .to(hoveredCard.position, {y: 3.18,z: 0.9,x: currentPlacement}, 0)
+            .to(hoveredCard.position, {y: TABlE_CONFIG.height,z: slot.position.z, x: slot.position.x}, 0)
             .to(hoveredCard.rotation, {y: 0,delay: 0.5,}, 0)
-            .to(hoveredCard.position, {y: 3.88,delay: 0.5}, 0)
-            .to(hoveredCard.position, {y: 3.18,duration: 0.3,delay: 0.7}, 0);
-            currentPlacement+=0.75;
+            .to(hoveredCard.position, {y: TABlE_CONFIG.height + .7,delay: 0.5}, 0)
+            .to(hoveredCard.position, {y: TABlE_CONFIG.height,duration: 0.3,delay: 0.7}, 0);
+            slot.card = hoveredCard;
         }
     } else {
         if(hoveredCard && !hoveredCard.isPreviewed) {
