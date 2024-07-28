@@ -1,213 +1,30 @@
 <script setup>
-import { CARD_CONFIG, TABlE_CONFIG } from '~/custom_modules/config';
+import { CARD_CONFIG, TABlE_CONFIG } from '@/custom_modules/config';
+import Game from '@/custom_modules/game';
 
 const route = useRoute();
 const router = useRouter();
 const snackbar = useSnackbar();
+const cardInfo = ref(null);
+const cardInfoObj = ref({show: false, name: '', img: ''});
 
-import * as THREE from 'three';
-import {OrbitControls} from 'three/examples/jsm/controls/OrbitControls.js';
-import {GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
-import gsap from 'gsap';
+const game = new Game({cardInfo, cardInfoObj});
 
-const gltfLoader = new GLTFLoader();
-
-let hoveredCard;
-const mousePosition = new THREE.Vector2();
-const raycaster = new THREE.Raycaster();
-
-const renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio( window.devicePixelRatio );
-document.body.appendChild(renderer.domElement);
-renderer.domElement.oncontextmenu = (e) => e.preventDefault();
-
-// Sets the color of the background.
-renderer.setClearColor(0xFEFEFE);
-renderer.shadowMap.enabled = true;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(
-    45,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-);
-
-// Sets orbit control to move the camera around.
-const orbit = new OrbitControls(camera, renderer.domElement);
-
-// Camera positioning.
-camera.position.set(0, 10, 5);
-// Has to be done everytime we update the camera position.
-orbit.target = new THREE.Vector3(0, 2.5, 0);
-orbit.update();
-orbit.enabled = false;
-
-// Creates a 12 by 12 grid helper.
-const gridHelper = new THREE.GridHelper(12, 12);
-scene.add(gridHelper);
-
-const directionalLight = new THREE.DirectionalLight(0xFFFFFF, 0.9);
-directionalLight.position.y = 10;
-scene.add(directionalLight);
-directionalLight.castShadow = true;
-
-const ambientLight = new THREE.AmbientLight(0xCCCCCC, 0.95);
-scene.add(ambientLight);
-
-gltfLoader.load('/kitchen_table.glb', function (gltf) {
-    const model = gltf.scene;
-    scene.add(model);
-    model.rotateY(Math.PI / 2);
-    model.scale.set(0.35, 0.35, 0.35);
-    model.position.set(0.25, 0, 0);
-
-    model.traverse(function (child) {
-        if (child.isMesh) {
-            child.castShadow = true;
-            child.receiveShadow = true;
-        }
-    });
-});
-
-const gameZone = new GameZone({x: -2.25, y: TABlE_CONFIG.height, z: 0.55}, 1, 1);
-const gameZone2 = new GameZone({x: -1.5, y: TABlE_CONFIG.height, z: 0.55}, 2, 2);
-
-const gameZones = [gameZone, gameZone2];
-
-for(const gameZone of gameZones) {
-    scene.add(gameZone.mesh);
-    scene.add(gameZone.hoverHelper);
-    for(const edge of gameZone.hoverEdges){
-        scene.add(edge);
-    }
-}
-
-function animate() {
-    renderer.render(scene, camera);
-
-    for(let i = 0; i < gameZones.length; i++) {
-        for(const edge of gameZones[i].hoverEdges) {
-            const tl = new gsap.timeline({
-                defaults: {duration: 0.2, delay: 0}
-            });
-
-            if(gameZones[i].hovered) tl.add('hover').to(edge.scale, {x: 1, y: 1, z: 1}, 'hover').to(edge.material, {opacity: 1}, 'hover');
-            else tl.add('hover').to(edge.material, {opacity: 0, delay: 0.1}, 'hover').to(edge.scale, {x: 0.5, y: 0.5, z: 0.5}, 'hover');
-        }
-    }
-}
-
-renderer.setAnimationLoop(animate);
-
-/*onMounted(() => {
-    const video = document.querySelector("#test");
+onMounted(() => {
+    /* const video = document.querySelector("#test");
     video.muted = true;
     video.loop = true;
     video.play();
-    window.cardManager.addVideoCard({name: 'video', path: '/test.mp4'}, video, scene);
-});*/
-
-window.addEventListener('click', function (e) {
-    if(!e.ctrlKey) {
-        if(hoveredCard && (!hoveredCard.isPlaced || !hoveredCard.isPreviewed)) {
-            hoveredCard.isPlaced = true;
-            const tl = new gsap.timeline({
-                defaults: {duration: 0.3, delay: 0}
-            });
-
-            const slot = gameZone2.cardSlots.find(slot => slot.card === null)
-            if(!slot) return;
-
-            tl.to(hoveredCard.rotation, {y: Math.PI,z: 0,x: -Math.PI / 2})
-            .to(hoveredCard.position, {y: TABlE_CONFIG.height,z: slot.position.z, x: slot.position.x}, 0)
-            .to(hoveredCard.rotation, {y: 0,delay: 0.5,}, 0)
-            .to(hoveredCard.position, {y: TABlE_CONFIG.height + .7,delay: 0.5}, 0)
-            .to(hoveredCard.position, {y: TABlE_CONFIG.height,duration: 0.3,delay: 0.7}, 0);
-            slot.card = hoveredCard;
-        }
-    } else {
-        if(hoveredCard && !hoveredCard.isPreviewed) {
-            hoveredCard.isPreviewed = true;
-            const tl = new gsap.timeline({
-                defaults: {duration: 0.3, delay: 0}
-            });
-
-            // show card in front of camera
-            tl.to(hoveredCard.rotation, {
-                x: Math.PI / 1.25,
-                y: Math.PI, z: -Math.PI
-            })
-            .to(hoveredCard.position, {
-                x: 0,
-                y: 7.5,
-                z: 3,
-            }, 0)
-            .to(hoveredCard.scale, {
-                x: 2.0,
-                y: 2.0,
-                z: 2.0,
-            }, 0);
-        }
-    }
+    window.cardManager.addVideoCard({name: 'video', path: '/test.mp4'}, video, scene); */
+    document.body.appendChild(game.engine.renderer.domElement);
 });
 
-window.addEventListener('mousemove', function (e) {
-    mousePosition.x = (e.clientX / window.innerWidth) * 2 - 1;
-    mousePosition.y = -(e.clientY / window.innerHeight) * 2 + 1;
-
-    raycaster.setFromCamera(mousePosition, camera);
-    const intersects = raycaster.intersectObject(scene);
-
-    if (intersects.length > 0) {
-        if(intersects[0].object.isCard && hoveredCard !== intersects[0].object) {
-            hoveredCard = intersects[0].object;
-        } else if(!intersects[0].object.isCard){
-            hoveredCard = null;
-        }
-    } else hoveredCard = null;
-
-    for(let i = 0; i < gameZones.length; i++) {
-        gameZones[i].hovered = raycaster.intersectObject(gameZones[i].hoverHelper).length > 0;
-    }
-
-    if (hoveredCard && !hoveredCard.isPlaced && !hoveredCard.isPreviewed) {
-        const tl = new gsap.timeline({
-            defaults: {duration: 0.3, delay: 0}
-        });
-
-        tl.to(hoveredCard.position, {
-            y: window.cardManager.positions[hoveredCard.inHandIndex].y + 0.5
-        });
-    }
-
-    scene.children.forEach(card => {
-        if (card.isCard) {
-            if (card !== hoveredCard && !card.isPlaced && !card.isPreviewed) {
-                const tl = new gsap.timeline({
-                    defaults: {duration: 0.3, delay: 0}
-                });
-
-                tl.to(card.position, {
-                    y: window.cardManager.positions[card.inHandIndex].y
-                });
-            }
-        }
-    });
-});
-
-window.addEventListener('resize', function() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-window.cardManager.cards.forEach(card => {
-    // set camera as parent of card
-    scene.add(card);
-});
+function closeCardInfo(){
+    cardInfoObj.value.show = false;
+    setTimeout(() => {
+        cardInfoObj.value = {show: false, name: '', img: ''};
+    }, 500);
+}
 
 useSeoMeta({
     // wrap title in computed function so title gets updated correctly
@@ -219,7 +36,16 @@ useSeoMeta({
 </script>
 <template>
     <div class="bg" ref="scrollEl">
-
+        <div id="card-info" @click="closeCardInfo" ref="cardInfo" :class="`card-info ${cardInfoObj.show ? '' : 'info-hidden'} ${cardInfoObj.orientation}`">
+            <div class="image-wrapper">
+                <div class="bg-image">
+                    <img class="image" :src="cardInfoObj.img" />
+                    <div class="overlay"></div>
+                </div>
+                <img class="image" :src="cardInfoObj.img" />
+            </div>
+            <p class="name">{{ cardInfoObj.name }}</p>
+        </div>
     </div>
 </template>
 <style scoped>
@@ -231,5 +57,98 @@ useSeoMeta({
 
 .video-texture{
     pointer-events: none;
+}
+
+#card-info{
+    width: 300px;
+    height: fit-content;
+    border-radius: 4px;
+    position: fixed;
+    left: 20px;
+    top: 20px;
+    z-index: 20;
+    background-color: #202020;
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+    transition: opacity .2s ease, transform .2s ease;
+    overflow: hidden;
+    box-shadow: 0 0 5px rgba(0, 0, 0, .5);
+
+    &.info-hidden{
+        opacity: 0;
+        pointer-events: none;
+        transform: translateX(-100px);
+        
+        .image{
+            opacity: 0;
+        }
+    }
+
+    &.landscape{
+        width: 430px;
+        height: fit-content;
+
+        .image{
+            height: 380px;
+            width: unset !important;
+            transform: rotate(90deg);
+        }
+    }
+
+    .image-wrapper{
+        width: 100%;
+        height: fit-content;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        padding: 10px;
+        position: relative;
+
+        .bg-image{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+
+            .image{
+                min-width: 150%;
+                min-height: 150%;
+                object-fit: cover;
+                filter: blur(15px);
+            }
+
+            .overlay{
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                inset: 0;
+                background-color: rgba(255, 255, 255, .5);
+                z-index: 1;
+            }
+        }
+
+        .image{
+            width: 250px;
+            opacity: 1;
+            transition: opacity .1s ease;
+            border-radius: 15px;
+            z-index: 1;
+        }
+    }
+
+    .name{
+        margin-top: 10px;
+        font-size: 24px;
+        font-weight: bold;
+        color: white;
+        text-align: center;
+    }
 }
 </style>

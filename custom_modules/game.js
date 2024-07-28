@@ -6,11 +6,13 @@ import { gsap } from 'gsap';
 import GUIWrapper from '@/custom_modules/gui'; 
 
 export default class Game{
-    constructor(width, height){
-        this.engine = new Engine(width, height);
+    constructor(refs){
+        this.engine = new Engine();
         this.controls = new Controls(this.engine, this);
         this.gui = new GUIWrapper();
         this.hand = [];
+
+        this.refs = refs;
 
         // add table
         this.engine.modelLoader.load('/kitchen_table.glb', (gltf) => {
@@ -31,7 +33,7 @@ export default class Game{
 
         // add game zones
         const gameZone = new GameZone('Ablagestapel', {x: -2.25, y: TABlE_CONFIG.height, z: 0.55}, 1, 1);
-        const gameZone2 = new GameZone('Spielstapel', {x: -1.5, y: TABlE_CONFIG.height, z: 0.55}, 2, 2);
+        const gameZone2 = new GameZone('Spielstapel', {x: -1.5, y: TABlE_CONFIG.height, z: 0.55}, 1, 3);
 
         this.gui.addFolder('Game-Zones');
         this.gui.addFolderToFolder('Ablagestapel', 'Game-Zones');
@@ -46,6 +48,9 @@ export default class Game{
             this.engine.add(gameZone.hoverHelper);
             for(const edge of gameZone.hoverEdges){
                 this.engine.add(edge);
+            }
+            for(const slot of gameZone.cardSlots) {
+                this.engine.add(slot.hoverHelper);
             }
         }
 
@@ -125,11 +130,28 @@ export default class Game{
             const t1 = new gsap.timeline({
                 defaults: {duration: 0.2, ease: 'power3.out'}
             });
-            t1.add('transition').to(card.position, {x: this.handPositions[index].x, y: this.handPositions[index].y, z: this.handPositions[index].z}, 'transition').to(card.rotation, {x: rotation.x, y: rotation.y, z: rotation.z}, 'transition');
+            t1.add('transition').to(card.position, {x: this.handPositions[index].x, y: this.handPositions[index].y, z: this.handPositions[index].z}, 'transition').to(card.rotation, {x: rotation.x, y: rotation.y, z: rotation.z}, 'transition').to(card.scale, {x: 1, y: 1, z: 1}, 'transition');
             card.rotation.set(...rotation);
 
             const c = this.gui.addToFolder(this.hand[index], 'name', 'Hand').disable();
             this.gui.hands.push(c);
         });
+    }
+
+    setCardInfo(card) {
+        if(this.refs.cardInfoObj.value.name !== ''){
+            this.refs.cardInfoObj.value.show = false;
+            setTimeout(()=>{
+                this.refs.cardInfoObj.value.name = card.name;
+                this.refs.cardInfoObj.value.img = card.path;
+                this.refs.cardInfoObj.value.orientation = card.orientation;
+                this.refs.cardInfoObj.value.show = true;
+            }, 300);
+        } else {
+            this.refs.cardInfoObj.value.name = card.name;
+            this.refs.cardInfoObj.value.img = card.path;
+            this.refs.cardInfoObj.value.orientation = card.orientation;
+            this.refs.cardInfoObj.value.show = true;
+        }
     }
 }
