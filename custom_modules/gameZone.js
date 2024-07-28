@@ -8,7 +8,9 @@ import MeshUtils from '@/custom_modules/utils';
 import CardSlot from '@/custom_modules/cardSlot';
 
 export default class GameZone{
-    constructor(pos, rows, columns){
+    constructor(name, pos, rows, columns){
+        this.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        this.name = name;
         this.rows = rows;
         this.columns = columns;
         this.cardSlots = [];
@@ -47,6 +49,7 @@ export default class GameZone{
         this.hoverHelper = new Mesh(hoverPlane, new MeshBasicMaterial({color: 0xFFFFFF}));
         this.hoverHelper.visible = false;
         this.hoverHelper.isGameZone = true; // for hover detection
+        this.hoverHelper.zoneId = this.id;
 
         this.mesh.computeLineDistances();
 
@@ -71,7 +74,7 @@ export default class GameZone{
 
         for(let row = 0; row < this.rows; row++){
             for(let column = 0; column < this.columns; column++){
-                this.cardSlots.push(new CardSlot({x, y: TABlE_CONFIG.height, z}));
+                this.cardSlots.push(new CardSlot({x, y: TABlE_CONFIG.height, z}, slotWidth, slotHeight));
 
                 x += slotWidth;
             }
