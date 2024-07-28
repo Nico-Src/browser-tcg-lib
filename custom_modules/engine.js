@@ -17,9 +17,7 @@ export default class Engine{
 
         this.renderer.setClearColor(0xFEFEFE);
         this.renderer.shadowMap.enabled = true;
-        this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-
-        this.renderer.domElement.oncontextmenu = (e) => e.preventDefault();
+        // this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.PerspectiveCamera(45,this.width / this.height,0.1,1000);
@@ -31,7 +29,7 @@ export default class Engine{
         this.camera.position.set(0, 10, 5);
         this.orbit.target = new THREE.Vector3(0, 2.5, 0);
         this.orbit.update();
-        // this.orbit.enabled = false;
+        this.orbit.enabled = false;
 
         // create grid helper
         const gridHelper = new THREE.GridHelper(12, 12);
